@@ -1,20 +1,58 @@
-# 📦 Avalanche Prediction Using Machine Learning
+# Avalanche Risk Forecasting
 
-## Demo App
+A physics-informed neural network (PINN) that estimates avalanche risk from snowpack and
+weather features, tuned to prioritize **recall** so that real avalanche conditions are
+rarely missed.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://avalancheprediction.streamlit.app/)
+**Live demo:** [apps.leonzhao.dev/avalanche](https://apps.leonzhao.dev/avalanche/) (always on, no cold start)
 
-## GitHub Codespaces
+Featured in context at [leonzhao.dev/ai/avalanche](https://leonzhao.dev/ai/avalanche/).
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/app-starter-kit?quickstart=1)
+![Avalanche Risk Assessment](docs/screenshot.png)
 
-## Section Heading
+## The approach
 
-This is filler text, please replace this with text for this section.
+The model is a **physics-informed neural network** built in TensorFlow/Keras. Alongside the
+usual data-driven loss, it incorporates snow-physics terms (incoming/outgoing longwave
+radiation energy balance) so its predictions stay consistent with how snowpacks actually
+behave, not just with the training labels.
 
-## Further Reading
+Design choices that matter for a safety application:
 
-This is filler text, please replace this with a explanatory text about further relevant resources for this repo
-- Resource 1
-- Resource 2
-- Resource 3
+- **Recall-weighted training.** Missing a real avalanche is far worse than a false alarm,
+  so the loss uses a focal objective weighted toward catching positives (high recall).
+- **KNN imputation for missing inputs.** Real-world feature vectors are often incomplete.
+  A KNN imputer, fit on the bundled training datasets (`data/`), fills in missing features
+  from the most similar historical conditions before the model runs.
+- **Pre-fit scaler and imputer** (`models/`) ship with the repo, so inference is fully
+  self-contained and works offline.
+
+## Results
+
+| Metric | Value |
+|---|---|
+| Recall (avalanche class) | **95.9%** |
+| Accuracy | **97.4%** |
+| Model | Physics-informed NN (TensorFlow) |
+
+## Repository layout
+
+```
+app.py                  Streamlit inference app
+models/                 trained weights + config + scaler + imputer + threshold
+data/                   4 training datasets (feed the KNN imputer at inference)
+notebooks/training.ipynb   model training
+```
+
+## Run it locally
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Then open the URL Streamlit prints (default http://localhost:8501).
+
+## License
+
+[MIT](LICENSE).
